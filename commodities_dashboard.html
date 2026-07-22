@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commodities Market Intelligence Dashboard | Samer Zeeshan</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#0b0e16; --surface:#13161f; --card:#1a1e2e; --accent:#f59e0b; --accent2:#4f9cf9; --green:#22c55e; --red:#ef4444; --purple:#a78bfa; --text:#e2e8f0; --muted:#8892a4; --border:#252a3e; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar h1{font-size:1rem;font-weight:600;}
+  .topbar h1 span{color:var(--accent);}
+  .badge{background:var(--accent);color:#000;border-radius:4px;padding:2px 8px;font-size:.7rem;font-weight:700;margin-left:10px;}
+  .author{font-size:.75rem;color:var(--muted);}
+  .filters{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;}
+  .filters label{font-size:.72rem;color:var(--muted);}
+  .filters select{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
+  .main{padding:24px 28px;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;}
+  .kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent);}
+  .kpi.green::before{background:var(--green);}.kpi.blue::before{background:var(--accent2);}.kpi.red::before{background:var(--red);}.kpi.purple::before{background:var(--purple);}
+  .kpi-label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
+  .kpi-value{font-size:1.6rem;font-weight:700;line-height:1;}
+  .kpi-sub{font-size:.7rem;color:var(--muted);margin-top:4px;}
+  .kpi-delta{display:inline-block;font-size:.7rem;padding:2px 6px;border-radius:4px;margin-top:5px;font-weight:600;}
+  .kpi-delta.up{background:rgba(34,197,94,.15);color:var(--green);}
+  .kpi-delta.down{background:rgba(239,68,68,.15);color:var(--red);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .grid-3{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+  @media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+  .chart-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;}
+  .chart-title{font-size:.8rem;font-weight:600;margin-bottom:3px;}
+  .chart-sub{font-size:.7rem;color:var(--muted);margin-bottom:14px;}
+  .ticker-bar{display:flex;gap:24px;overflow-x:auto;padding-bottom:8px;margin-bottom:20px;}
+  .ticker{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 18px;min-width:130px;flex-shrink:0;}
+  .ticker-sym{font-size:.75rem;font-weight:700;color:var(--accent);}
+  .ticker-price{font-size:1.2rem;font-weight:700;margin:3px 0;}
+  .ticker-chg{font-size:.72rem;font-weight:600;}
+  .chg-up{color:var(--green);}.chg-down{color:var(--red);}
+  .data-table{width:100%;border-collapse:collapse;font-size:.76rem;}
+  .data-table th{background:var(--surface);color:var(--muted);text-transform:uppercase;font-size:.63rem;letter-spacing:.06em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+  .data-table td{padding:9px 12px;border-bottom:1px solid var(--border);}
+  .data-table tr:hover td{background:rgba(245,158,11,.04);}
+  .pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.65rem;font-weight:600;}
+  .pill.bull{background:rgba(34,197,94,.15);color:var(--green);}
+  .pill.bear{background:rgba(239,68,68,.15);color:var(--red);}
+  .pill.neut{background:rgba(245,158,11,.15);color:var(--accent);}
+  .spike{color:var(--red);font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div><h1>📈 Commodities Market Intelligence Dashboard <span>| Trading Analytics</span><span class="badge">LIVE</span></h1></div>
+  <div class="author">Samer Zeeshan &nbsp;·&nbsp; Data Analyst &nbsp;·&nbsp; github.com/samer-z</div>
+</div>
+
+<div class="filters">
+  <label>CATEGORY</label>
+  <select><option>All Markets</option><option>Energy</option><option>Metals</option><option>Agriculture</option><option>Livestock</option></select>
+  <label>PERIOD</label>
+  <select><option>30 Days</option><option>60 Days</option><option>90 Days</option><option>YTD</option><option>1 Year</option></select>
+  <label>STRATEGY</label>
+  <select><option>All</option><option>Spot</option><option>Futures</option><option>Options</option><option>Hedge</option></select>
+</div>
+
+<div class="main">
+
+  <!-- Ticker Bar -->
+  <div class="ticker-bar">
+    <div class="ticker"><div class="ticker-sym">CL · CRUDE OIL</div><div class="ticker-price">$82.47</div><div class="ticker-chg chg-up">▲ +1.24 (+1.53%)</div></div>
+    <div class="ticker"><div class="ticker-sym">GC · GOLD</div><div class="ticker-price">$2,341.80</div><div class="ticker-chg chg-up">▲ +12.40 (+0.53%)</div></div>
+    <div class="ticker"><div class="ticker-sym">SI · SILVER</div><div class="ticker-price">$27.62</div><div class="ticker-chg chg-down">▼ -0.38 (-1.36%)</div></div>
+    <div class="ticker"><div class="ticker-sym">ZC · CORN</div><div class="ticker-price">$482.50</div><div class="ticker-chg chg-down">▼ -4.25 (-0.87%)</div></div>
+    <div class="ticker"><div class="ticker-sym">ZW · WHEAT</div><div class="ticker-price">$568.75</div><div class="ticker-chg chg-up">▲ +8.50 (+1.52%)</div></div>
+    <div class="ticker"><div class="ticker-sym">NG · NAT GAS</div><div class="ticker-price">$2.184</div><div class="ticker-chg chg-down">▼ -0.042 (-1.89%)</div></div>
+    <div class="ticker"><div class="ticker-sym">HG · COPPER</div><div class="ticker-price">$4.512</div><div class="ticker-chg chg-up">▲ +0.067 (+1.51%)</div></div>
+    <div class="ticker"><div class="ticker-sym">ZS · SOYBEANS</div><div class="ticker-price">$1,148.25</div><div class="ticker-chg chg-down">▼ -6.75 (-0.58%)</div></div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi green"><div class="kpi-label">Total Trade Volume (YTD)</div><div class="kpi-value">$4.82B</div><div class="kpi-sub">Across all commodities</div><span class="kpi-delta up">▲ 18.4% YoY</span></div>
+    <div class="kpi"><div class="kpi-label">Total Commission Revenue</div><div class="kpi-value">$6.14M</div><div class="kpi-sub">All broker activity</div><span class="kpi-delta up">▲ 9.2% YoY</span></div>
+    <div class="kpi blue"><div class="kpi-label">Net Realized P&L</div><div class="kpi-value">$28.7M</div><div class="kpi-sub">Across all strategies</div><span class="kpi-delta up">▲ 22.1% YoY</span></div>
+    <div class="kpi"><div class="kpi-label">Avg Broker Win Rate</div><div class="kpi-value">58.3%</div><div class="kpi-sub">Winning trades / total trades</div><span class="kpi-delta up">▲ 3.1 pts</span></div>
+    <div class="kpi red"><div class="kpi-label">Spike Anomalies Detected</div><div class="kpi-value">14</div><div class="kpi-sub">Moves > 2σ this quarter</div><span class="kpi-delta down">▲ 4 vs. Q3</span></div>
+    <div class="kpi purple"><div class="kpi-label">Highest Volatility</div><div class="kpi-value">NG</div><div class="kpi-sub">CV: 34.2% — Natural Gas</div><span class="kpi-delta down">High Risk</span></div>
+  </div>
+
+  <!-- Row 1 -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Price Trend — Energy vs. Metals (Indexed to 100)</div>
+      <div class="chart-sub">Normalized performance comparison over 12 months — SQL: Q1 Rolling Avg</div>
+      <canvas id="trendChart" height="220"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">30-Day Price Volatility by Commodity</div>
+      <div class="chart-sub">Coefficient of Variation % — higher = riskier — SQL: Q1 StdDev/Mean</div>
+      <canvas id="volatilityChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 2 -->
+  <div class="grid-3">
+    <div class="chart-card">
+      <div class="chart-title">Monthly Trade Volume by Category</div>
+      <div class="chart-sub">Gross trade value stacked by commodity category — SQL: Q3 VWAP</div>
+      <canvas id="volumeChart" height="240"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Broker P&L Distribution</div>
+      <div class="chart-sub">Net realized P&L by firm type — SQL: Q4</div>
+      <canvas id="brokerDonut" height="240"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">30d Momentum Leaders</div>
+      <div class="chart-sub">% price change vs. 30 days ago — SQL: Q2</div>
+      <canvas id="momentumChart" height="240"></canvas>
+    </div>
+  </div>
+
+  <!-- Anomaly Table -->
+  <div class="chart-card">
+    <div class="chart-title">⚠ Anomaly Detection — Price Spikes (Z-Score > 2σ)</div>
+    <div class="chart-sub">SQL Query Q6: Daily moves flagged using rolling standard deviation window function</div>
+    <br>
+    <table class="data-table">
+      <thead><tr><th>Date</th><th>Symbol</th><th>Name</th><th>Category</th><th>Prev Close</th><th>Close</th><th>Daily Move</th><th>Z-Score</th><th>Status</th><th>Momentum</th></tr></thead>
+      <tbody>
+        <tr><td>2024-10-14</td><td>NG</td><td>Natural Gas</td><td>Energy</td><td>$2.042</td><td>$2.387</td><td class="chg-up">+$0.345</td><td><span class="spike">3.82σ</span></td><td><span class="pill bear">⚠ SPIKE</span></td><td><span class="pill bull">Bullish</span></td></tr>
+        <tr><td>2024-09-26</td><td>ZW</td><td>Wheat</td><td>Agriculture</td><td>$524.25</td><td>$568.75</td><td class="chg-up">+$44.50</td><td><span class="spike">2.94σ</span></td><td><span class="pill bear">⚠ SPIKE</span></td><td><span class="pill bull">Bullish</span></td></tr>
+        <tr><td>2024-09-03</td><td>SI</td><td>Silver</td><td>Metals</td><td>$29.84</td><td>$27.21</td><td class="chg-down">-$2.63</td><td><span class="spike">2.61σ</span></td><td><span class="pill bear">⚠ SPIKE</span></td><td><span class="pill bear">Bearish</span></td></tr>
+        <tr><td>2024-08-12</td><td>CL</td><td>Crude Oil</td><td>Energy</td><td>$77.94</td><td>$80.72</td><td class="chg-up">+$2.78</td><td><span class="spike">2.48σ</span></td><td><span class="pill bear">⚠ SPIKE</span></td><td><span class="pill neut">Neutral</span></td></tr>
+        <tr><td>2024-07-22</td><td>ZC</td><td>Corn</td><td>Agriculture</td><td>$418.75</td><td>$398.00</td><td class="chg-down">-$20.75</td><td><span class="spike">2.31σ</span></td><td><span class="pill bear">⚠ SPIKE</span></td><td><span class="pill bear">Bearish</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+Chart.defaults.color = '#8892a4';
+Chart.defaults.borderColor = '#252a3e';
+Chart.defaults.font.family = "'Segoe UI',system-ui,sans-serif";
+
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Price Trend (indexed)
+new Chart(document.getElementById('trendChart'), {
+  type:'line',
+  data:{
+    labels:months,
+    datasets:[
+      {label:'Energy (CL+NG avg)',data:[100,97.2,101.4,104.8,108.2,105.6,110.4,107.8,112.6,109.4,114.2,118.8],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',fill:true,tension:.4,pointRadius:3},
+      {label:'Metals (GC+SI avg)',data:[100,102.8,105.6,108.4,112.8,116.4,114.2,118.8,122.4,119.6,124.2,128.8],borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.1)',fill:true,tension:.4,pointRadius:3},
+      {label:'Agriculture (ZC+ZW avg)',data:[100,98.4,96.2,94.8,97.6,100.2,98.8,95.4,99.2,103.6,108.4,106.8],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.4,pointRadius:3}
+    ]
+  },
+  options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12}}},scales:{x:{grid:{color:'#252a3e'}},y:{grid:{color:'#252a3e'},ticks:{callback:v=>v+''},title:{display:true,text:'Indexed Price (100 = Jan)',color:'#8892a4',font:{size:10}}}}}
+});
+
+// Volatility
+new Chart(document.getElementById('volatilityChart'), {
+  type:'bar',
+  data:{
+    labels:['NG','ZW','SI','ZC','CL','ZS','HG','GC'],
+    datasets:[{label:'CV % (30d)',data:[34.2,22.8,18.4,16.9,14.2,12.8,10.6,8.4],
+      backgroundColor:['#ef4444','#ef4444','#f59e0b','#f59e0b','#f59e0b','#4f9cf9','#4f9cf9','#22c55e'],borderRadius:5}]
+  },
+  options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#252a3e'}},y:{grid:{color:'#252a3e'},ticks:{callback:v=>v+'%'},title:{display:true,text:'Coefficient of Variation %',color:'#8892a4',font:{size:10}}}}}
+});
+
+// Volume stacked
+new Chart(document.getElementById('volumeChart'), {
+  type:'bar',
+  data:{
+    labels:months,
+    datasets:[
+      {label:'Energy',data:[420,395,448,462,478,442,512,498,487,421,408,496],backgroundColor:'rgba(245,158,11,.8)',borderRadius:3},
+      {label:'Metals',data:[180,168,192,204,218,226,214,238,224,196,188,228],backgroundColor:'rgba(167,139,250,.8)',borderRadius:3},
+      {label:'Agriculture',data:[120,112,128,138,142,136,128,118,132,144,152,138],backgroundColor:'rgba(34,197,94,.8)',borderRadius:3},
+      {label:'Livestock',data:[48,42,52,58,62,54,48,56,52,46,44,54],backgroundColor:'rgba(79,156,249,.8)',borderRadius:3}
+    ]
+  },
+  options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},scales:{x:{stacked:true,grid:{color:'#252a3e'}},y:{stacked:true,grid:{color:'#252a3e'},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'M'}}}}
+});
+
+// Broker P&L Donut
+new Chart(document.getElementById('brokerDonut'), {
+  type:'doughnut',
+  data:{
+    labels:['Institutional','Proprietary','Retail'],
+    datasets:[{data:[58,31,11],backgroundColor:['#4f9cf9','#a78bfa','#f59e0b'],borderWidth:0,hoverOffset:6}]
+  },
+  options:{responsive:true,cutout:'68%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:12}}}}
+});
+
+// Momentum
+new Chart(document.getElementById('momentumChart'), {
+  type:'bar',
+  data:{
+    labels:['HG','GC','ZW','CL','ZS','ZC','SI','NG'],
+    datasets:[{label:'30d Change %',data:[8.4,6.2,4.8,2.1,-0.6,-2.4,-4.8,-8.6],
+      backgroundColor:ctx => ctx.raw >= 0 ? 'rgba(34,197,94,.75)' : 'rgba(239,68,68,.75)',borderRadius:4}]
+  },
+  options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#252a3e'},ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}
+});
+</script>
+</body>
+</html>
